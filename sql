@@ -12,5 +12,5 @@ INSERT INTO foto_katalog
 11 copyright 
 12 copyright_holder 
 13 tagovi 
-14 doi 
+14 doi: 10.5281/zenodo.8174233
 15 geom geometry (Point,4326) 

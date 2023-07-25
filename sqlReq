@@ -1,0 +1,2 @@
+INSERT INTO foto_katalog 
+ id signatura naziv naziv_eng opis opis_eng lokacija datum_sni kategorija autor copyright copyright_holder tagovi doi geom
