@@ -2,13 +2,17 @@ const express = require('express');
 const path = require('path');
 const pool = require('./db');
 const fileUpload = require('express-fileupload');
-const dajExif = require('./middleware/dajExif');
+const cors = require('cors');
 thumb = require('node-thumbnail').thumb;
 
 const PORT = process.env.PORT || 3500;
+
 const app = express();
 
+//m`wares
+app.use(cors({ origin: '*' }));
 app.use('/public', express.static('public'));
+app.use(express.json());
 
 //get all
 app.get('/photos', async (req, res) => {
@@ -16,7 +20,7 @@ app.get('/photos', async (req, res) => {
     const fotos = await pool.query('SELECT * FROM foto_katalog');
     res.json(fotos.rows);
   } catch (err) {
-    console.error(err.msg);
+    console.error(err.message);
   }
 });
 
@@ -33,8 +37,8 @@ app.get('/photos/:id', async (req, res) => {
     console.error(err.msg);
   }
 });
-//img upload
 
+//img upload
 app.post(
   '/upload',
   fileUpload({ createParentPath: true }),
@@ -57,9 +61,11 @@ app.post(
     });
   }
 );
+
 // novi zapis
 app.post('/novi', async (req, res) => {
   try {
+    console.log(req.body);
     const {
       signatura,
       naziv,
@@ -76,9 +82,12 @@ app.post('/novi', async (req, res) => {
       doi,
       lon, //  lon and lat => req.body
       lat,
+      //   // url_image,
+      //   // url_thumb,
     } = req.body;
 
     const geom = `POINT(${lon} ${lat})`;
+    console.log(geom);
 
     const noviZapis = [
       signatura,
@@ -95,13 +104,15 @@ app.post('/novi', async (req, res) => {
       tagovi,
       doi,
       geom,
+      // url_image,
+      // url_thumb,
     ];
-
+    console.log(noviZapis);
     const zaPis = await pool.query(
-      'INSERT INTO foto_katalog (signatura, naziv, naziv_eng, opis, opis_eng, lokacija, datum_sni, kategorija, autor, copyright, copyright_holder, tagovi, doi, geom) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ST_SetSRID(ST_MakePoint($14, $15), 4326)) RETURNING *',
-      [...noviZapis, lon, lat]
+      'INSERT INTO foto_katalog (signatura, naziv, naziv_eng, opis, opis_eng, lokacija, datum_sni, kategorija, autor, copyright, copyright_holder, tagovi, doi, geom) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ST_SetSRID(ST_GeomFromText($14), 4326)) RETURNING *',
+      noviZapis
     );
-
+    console.log(zaPis);
     res.json(zaPis.rows[0]);
   } catch (err) {
     console.error(err.message);
@@ -109,38 +120,13 @@ app.post('/novi', async (req, res) => {
   }
 });
 
-// img to db
-app.post('/img2db', async (req, res) => {
-  try {
-    const newImage = [fileName, filePath];
-    const newImg = await pool.query(
-      'INSERT INTO foto_katalog (newImage) VALUES($1) RETURNING *',
-      newImage
-    );
-    res.json(newImg.rows[0]);
-  } catch (err) {
-    console.error(err.msg);
-  }
-});
-//exif to db
-app.post('/exifr', async (req, res) => {
-  try {
-    const { exifTrunc } = req.body;
-    const newExifr = await pool.query(
-      'INSERT INTO foto_katalog (exifTrunc) VALUES($1) RETURNING *',
-      [exifTrunc]
-    );
-    res.json(newExifr.rows[0]);
-  } catch (error) {}
-});
-
 //update one
 app.put('/photos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { exifTrunc } = req.body;
+    const { signatura } = req.body;
     const updateZapis = await pool.query(
-      'UPDATE foto_katalog SET exifTrunc=$1 WHERE id=$2',
+      'UPDATE foto_katalog SET signatura=$1 WHERE id=$2',
       [exifTrunc, id]
     );
     res.json(`dodan exifTrunc u zapis br. ${id}`);
