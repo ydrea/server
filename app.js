@@ -104,12 +104,10 @@ app.post('/novi', async (req, res) => {
       tagovi,
       doi,
       geom,
-      // url_image,
-      // url_thumb,
-    ];
+      ];
     console.log(noviZapis);
     const zaPis = await pool.query(
-      'INSERT INTO foto_katalog (signatura, naziv, naziv_eng, opis, opis_eng, lokacija, datum_sni, kategorija, autor, copyright, copyright_holder, tagovi, doi, geom) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ST_SetSRID(ST_GeomFromText($14), 4326)) RETURNING *',
+      'INSERT INTO foto_katalog (signatura, naziv, naziv_eng, opis, opis_eng, lokacija, datum_sni, kategorija, autor, copyright, copyright_holder, tagovi, doi, geom) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ST_GeomFromText($14)) RETURNING *',
       noviZapis
     );
     console.log(zaPis);
@@ -148,5 +146,21 @@ app.delete('/photos/:id', async (req, res) => {
     console.error(err.msg);
   }
 });
+
+//search
+// app.get('search/:tag', async (req, res) => {
+//   console.log(req.params);
+//   const queryBy = new RegExp(req.params?.tagovi, 'i');
+//   if (queryBy !== null) {
+//     try {
+//       const searchRez = await find({ exifr: queryBy });
+//       res.json(searchRez);
+//     } catch (err) {
+//       console.error(err.msg);
+//     }
+//   } else {
+//     res.status(404);
+//   }
+// });
 
 app.listen(PORT, () => console.log(`samslu ${PORT}`));
