@@ -3,6 +3,9 @@ const path = require('path');
 const pool = require('./db');
 const fileUpload = require('express-fileupload');
 const cors = require('cors');
+const axios = require('axios');
+// const dbgeo = require('dbgeo');
+// const geojsonhint = require('geojsonhint');
 thumb = require('node-thumbnail').thumb;
 
 const PORT = process.env.PORT || 3500;
@@ -14,10 +17,68 @@ app.use(cors({ origin: '*' }));
 app.use('/public', express.static('public'));
 app.use(express.json());
 
-//get all
+//get marker coordinates per photo
+app.get('/json_photos', async (req, res) => {
+  try {
+    const jsonPhotoCoordinates = await pool.query(
+      'SELECT signatura, ST_AsGeoJSON(geom, 6) AS geometry FROM foto_katalog_rank' //
+    );
+    res.json(jsonPhotoCoordinates.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+//jusst coords
+app.get('/coords', async (req, res) => {
+  try {
+    const jsonTkz = await pool.query(
+      'SELECT ST_AsGeoJSON(geom, 6) AS geometry FROM foto_katalog_rank'
+    );
+    res.json(jsonTkz.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+//{"type" : "FeatureCollection", "features" : [{"type": "Feature", "geometry": {"type":"Point","coordinates":[1,1]}, "properties": {"id": 1, "name": "one"}}, {"type": "Feature", "geometry": {"type":"Point","coordinates":[2,2]}, "properties": {"id": 2, "name": "two"}}, {"type": "Feature", "geometry": {"type":"Point","coordinates":[3,3]}, "properties": {"id": 3, "name": "three"}}]}
+
+//get wfs TKZ
+app.get('/wfs_tkz', async (req, res) => {
+  try {
+    const wfsUrl = 'https://landscape.agr.hr/qgis/wfs';
+    const params = {
+      service: 'WFS',
+      version: '2.0.0',
+      request: 'GetFeature',
+      typeName: 'tema_koristenje_zemljista',
+      outputFormat: 'application/json',
+      srsName: 'epsg:4326',
+    };
+
+    // http
+    const response = await axios.get(wfsUrl, { params });
+    res.json(response.data);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Error fetching WFS data.');
+  }
+});
+
+//get all photos
 app.get('/photos', async (req, res) => {
   try {
     const fotos = await pool.query('SELECT * FROM foto_katalog');
+    res.json(fotos.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+//get all + rank
+app.get('/photosr', async (req, res) => {
+  try {
+    const fotos = await pool.query('SELECT * FROM foto_katalog_rank');
     res.json(fotos.rows);
   } catch (err) {
     console.error(err.message);
@@ -104,7 +165,7 @@ app.post('/novi', async (req, res) => {
       tagovi,
       doi,
       geom,
-      ];
+    ];
     console.log(noviZapis);
     const zaPis = await pool.query(
       'INSERT INTO foto_katalog (signatura, naziv, naziv_eng, opis, opis_eng, lokacija, datum_sni, kategorija, autor, copyright, copyright_holder, tagovi, doi, geom) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ST_GeomFromText($14)) RETURNING *',
@@ -125,9 +186,9 @@ app.put('/photos/:id', async (req, res) => {
     const { signatura } = req.body;
     const updateZapis = await pool.query(
       'UPDATE foto_katalog SET signatura=$1 WHERE id=$2',
-      [exifTrunc, id]
+      [signatura, id]
     );
-    res.json(`dodan exifTrunc u zapis br. ${id}`);
+    res.json(`izmijenjen zapis br. ${id}`);
   } catch (err) {
     console.error(err.msg);
   }
@@ -163,4 +224,4 @@ app.delete('/photos/:id', async (req, res) => {
 //   }
 // });
 
-app.listen(PORT, () => console.log(`samslu ${PORT}`));
+app.listen(PORT, () => console.log(`Slušam port ${PORT}`));
