@@ -32,10 +32,10 @@ app.get('/json_photos', async (req, res) => {
 //jusst coords
 app.get('/coords', async (req, res) => {
   try {
-    const jsonTkz = await pool.query(
+    const coords = await pool.query(
       'SELECT ST_AsGeoJSON(geom, 6) AS geometry FROM foto_katalog_rank'
     );
-    res.json(jsonTkz.rows);
+    res.json(coords.rows);
   } catch (err) {
     console.error(err.message);
   }
@@ -55,10 +55,10 @@ app.get('/wfs_tkz', async (req, res) => {
       outputFormat: 'application/json',
       srsName: 'epsg:4326',
     };
-
-    // http
     const response = await axios.get(wfsUrl, { params });
-    res.json(response.data);
+    const geojsonData = response.data;
+    res.setHeader('Content-Type', 'application/json');
+    res.send(geojsonData);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Error fetching WFS data.');
@@ -85,13 +85,27 @@ app.get('/photosr', async (req, res) => {
   }
 });
 
-//get one
+//get one id
 app.get('/photos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const foto = await pool.query(
       'SELECT * FROM foto_katalog WHERE id=$1',
       [id]
+    );
+    res.json(foto.rows[0]);
+  } catch (err) {
+    console.error(err.msg);
+  }
+});
+
+//get one img
+app.get('/public/:signatura', async (req, res) => {
+  try {
+    const { signatura } = req.params;
+    const foto = await pool.query(
+      'SELECT * FROM foto_katalog WHERE signatura=$1',
+      [signatura]
     );
     res.json(foto.rows[0]);
   } catch (err) {
