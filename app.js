@@ -29,7 +29,7 @@ app.get('/json_photos', async (req, res) => {
   }
 });
 
-//jusst coords
+//just coords
 app.get('/coords', async (req, res) => {
   try {
     const coords = await pool.query(
@@ -38,6 +38,33 @@ app.get('/coords', async (req, res) => {
     res.json(coords.rows);
   } catch (err) {
     console.error(err.message);
+  }
+});
+
+//ranks
+app.get('/ranks', async (req, res) => {
+  try {
+    const ranks = await pool.query(
+      'SELECT CAST(rank_number AS INTEGER) FROM foto_katalog_rank'
+      // [rank_number]
+    );
+    res.json(ranks.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+//rank+sig
+app.get('/rank', async (req, res) => {
+  try {
+    const rank_number = req.query.rank_number;
+    const rank = await pool.query(
+      'SELECT CAST(rank_number AS INTEGER), signatura FROM foto_katalog_rank WHERE rank_number = $1',
+      [rank_number]
+    );
+    res.json(rank.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -85,12 +112,12 @@ app.get('/photosr', async (req, res) => {
   }
 });
 
-//get one id
-app.get('/photos/:id', async (req, res) => {
+//get one id from ranked
+app.get('/photosr/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const foto = await pool.query(
-      'SELECT * FROM foto_katalog WHERE id=$1',
+      'SELECT * FROM foto_katalog_rank WHERE id=$1',
       [id]
     );
     res.json(foto.rows[0]);
