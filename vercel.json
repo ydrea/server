@@ -1,4 +1,7 @@
 {
+    
+        "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
+      
     "version": 2,
     "name": "banija-server",
     "builds": [
