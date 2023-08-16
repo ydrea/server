@@ -1,9 +1,12 @@
 const path = require('path');
 const ssl = require('ssl');
-require('dotenv').config({
-  override: true,
-  path: path.join(__dirname, 'g.env'),
-});
+require('dotenv')
+  .config
+  //   {
+  //   override: true,
+  //   path: path.join(__dirname, 'g.env'),
+  // }
+  ();
 const pg = require('pg');
 
 const pool = new pg.Pool({
@@ -40,11 +43,11 @@ module.exports = pool;
 // const pg = require('pg');
 
 // const pool = new pg.Pool({
-// user: process.env.PGUSER,
-// host: process.env.PGHOST,
-// database: process.env.PGDATABASE,
-// password: process.env.PGPASSWORD,
-// port: process.env.PGPORT,
+// user: 'banija_www',
+// host: 'landscape.agr.hr',
+// database: 'banija',
+// password: '1akauntzabanijawwwpotrebe2',
+// port: 5434,
 // requiressl: true, // { rejectUnauthorized: false },
 //   //
 //   connectionTimeoutMillis: 22222,

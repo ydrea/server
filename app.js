@@ -264,5 +264,10 @@ app.delete('/photos/:id', async (req, res) => {
 //     res.status(404);
 //   }
 // });
+// get /
+
+app.get('/', (req, res) => {
+  res.send('Hello from the server!');
+});
 
 app.listen(PORT, () => console.log(`Slušam port ${PORT}`));
